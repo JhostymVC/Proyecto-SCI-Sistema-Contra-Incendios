@@ -26,9 +26,8 @@ namespace SistemaContraIncendios.UI
                 MostrarEncabezado("PANEL DE CONTROL DE INCENDIOS", null, ConsoleColor.Cyan);
                 Console.WriteLine("                                               ");
                 Console.WriteLine(" [1] Ver estado actual");
-                Console.WriteLine(" [2] Forzar Temperatura Crítica");
-                Console.WriteLine(" [3] Ver Historial de Alertas");
-                Console.WriteLine(" [4] Salir del Sistema");
+                Console.WriteLine(" [2] Activar Aspersores");
+                Console.WriteLine(" [3] Salir del Sistema");
                 Console.WriteLine("                                               ");
                 Console.WriteLine("--------------------------------------------------");
                 Console.Write("Seleccione una opción: ");
@@ -39,12 +38,9 @@ namespace SistemaContraIncendios.UI
                         MenuMonitoreo();
                         break;
                     case "2":
-                        ForzarFalloSimulado();
+                        SubmenuAspersores(0, false);
                         break;
                     case "3":
-                        MostrarBitacora();
-                        break;
-                    case "4":
                         ejecutar = false;
                         Console.WriteLine("Apagando panel de control...");
                         break;
@@ -147,9 +143,7 @@ namespace SistemaContraIncendios.UI
                 MostrarEncabezado($"ALERTA: INCENDIO EN PISO(S) {string.Join(",", pisosAfectados)}", "SISTEMA EN ESTADO DE CRISIS", ConsoleColor.Red);
                 Console.WriteLine("                                               ");
                 Console.WriteLine(" [1] Activar Aspersores");
-                Console.WriteLine(" [2] Evacuar Edificio (Alerta General)");
-                Console.WriteLine(" [3] Llamar al Cuerpo de Bomberos");
-                Console.WriteLine(" [4] Restablecer Sistema / Silenciar Alarma");
+                Console.WriteLine(" [2] Restablecer Sistema / Silenciar Alarma");
                 Console.WriteLine("--------------------------------------------------");
                 Console.Write("Seleccione una acción de mitigación urgente: ");
 
@@ -190,36 +184,6 @@ namespace SistemaContraIncendios.UI
                         }
                         break;
                     case "2":
-                        // Mostrar alerta en rojo y emitir sirenas durante 3s, luego volver al menú
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("\n[SISTEMA]: Activando sirenas de evacuación por voz. Salga en orden.");
-                        RegistrarEvento("Protocolo de evacuación general activado.");
-                        // Emitir patrón de sirena (alternar tonos altos y bajos)
-                        for (int i = 0; i < 6; i++)
-                        {
-                            Console.Beep(1200, 300);
-                            Console.Beep(700, 300);
-                        }
-                        // Mantener mensaje en rojo visible unos segundos antes de regresar
-                        Thread.Sleep(3000);
-                        Console.ResetColor();
-                        break;
-                    case "3":
-                        // Mostrar alerta en rojo y simular llamada telefónica, luego volver al menú
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("\n[SISTEMA]: Transmitiendo coordenadas a Bomberos... [OK]");
-                        RegistrarEvento("Señal de emergencia enviada a bomberos.");
-                        // Simular sonido de teléfono (ring) con pulsos cortos
-                        for (int i = 0; i < 3; i++)
-                        {
-                            Console.Beep(800, 200);
-                            Thread.Sleep(250);
-                        }
-                        // Mantener el mensaje rojo visible unos segundos antes de regresar
-                        Thread.Sleep(3000);
-                        Console.ResetColor();
-                        break;
-                    case "4":
                         // Mostrar alerta roja de intento de restablecer durante unos segundos
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("\n[SISTEMA]: Intentando restablecer / silenciar alarma...");
@@ -267,13 +231,20 @@ namespace SistemaContraIncendios.UI
             while (true)
             {
                 Console.Clear();
-                MostrarEncabezado($"ALERTA: INCENDIO EN PISO {pisoConFuego}", null, ConsoleColor.Red);
+                if (pisoConFuego > 0)
+                {
+                    MostrarEncabezado($"ALERTA: INCENDIO EN PISO {pisoConFuego}", null, ConsoleColor.Red);
+                }
+                else
+                {
+                    MostrarEncabezado("ACTIVACIÓN DE ASPERSORES", null, ConsoleColor.Cyan);
+                }
                 Console.WriteLine("                                               ");
                 Console.WriteLine("=== ACTIVACIÓN DE ASPERSORES ===");
                 Console.WriteLine(" [1] Activar en Piso 1");
                 Console.WriteLine(" [2] Activar en Piso 2");
                 Console.WriteLine(" [3] Activar en Piso 3");
-                Console.WriteLine(" [4] Activar en TODOS los pisos");
+                Console.WriteLine(" [4] Volver al menú");
                 Console.WriteLine("                                               ");
                 Console.Write("Seleccione una opción: ");
 
@@ -284,7 +255,7 @@ namespace SistemaContraIncendios.UI
                 if (int.TryParse((opc ?? string.Empty).Trim(), out int valor))
                 {
                     if (valor >= 1 && valor <= 3) seleccionPiso = valor;
-                    else if (valor == 4) seleccionPiso = -1; // Código para todos
+                    else if (valor == 4) return false; // Volver al menú
                 }
                 else
                 {
@@ -292,121 +263,39 @@ namespace SistemaContraIncendios.UI
                     Console.WriteLine("\nEntrada no válida.");
                     Console.ResetColor();
                     Thread.Sleep(2000);
-                    continue; // volver a mostrar el menú
+                    continue;
                 }
 
-                // Validar restricción crítica de protección por daño de agua
-                if (seleccionPiso == -1)
+                // Si estamos en modo emergencia, validar que sea el piso correcto
+                if (pisoConFuego > 0 && seleccionPiso != pisoConFuego)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("\n[BLOQUEADO]: No se pueden activar TODOS los aspersores.");
-                    Console.WriteLine("Razón: Hay pisos seguros. Se causarían daños materiales severos innecesarios.");
-                    Console.ResetColor();
-                    Thread.Sleep(3000);
-                    return false;
-                }
-                else if (seleccionPiso != pisoConFuego)
-                {
-                    // Mostrar restricción y regresar automáticamente al menú de selección
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"\n[RESTRICCIÓN]: Activación denegada en Piso {seleccionPiso}.");
                     Console.WriteLine($"El sensor reporta estado NORMAL. Solo permitido en el piso afectado ({pisoConFuego}).");
                     Console.ResetColor();
                     Thread.Sleep(3000);
-                    continue; // volver a mostrar el menú para que el usuario reintente
+                    continue;
                 }
-                else
+
+                // Activar aspersores
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine($"\n[ÉXITO]: Aspersores ACTIVADOS en el Piso {seleccionPiso}. Extinguiendo fuego...");
+                RegistrarEvento($"Aspersores activados con éxito en el Piso {seleccionPiso}.");
+                Thread.Sleep(2000);
+                Console.ResetColor();
+                
+                // Enfriar el piso si estamos en modo emergencia
+                if (pisoConFuego > 0)
                 {
-                    Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.WriteLine($"\n[ÉXITO]: Aspersores ACTIVADOS en el Piso {pisoConFuego}. Extinguiendo fuego...");
-                    RegistrarEvento($"Aspersores activados con éxito en el Piso {pisoConFuego}.");
-                    // Mantener el mensaje azul visible unos segundos
-                    Thread.Sleep(2000);
-                    Console.ResetColor();
-                    // Simular que el agua enfría el piso afectado para salir de la crisis
-                    sensoresEdificio[pisoConFuego - 1].EnfriarPiso();
-                    // Detener el monitoreo y regresar al menú principal solo si se solicitó
+                    sensoresEdificio[seleccionPiso - 1].EnfriarPiso();
                     if (detenerMonitoreoOnSuccess)
                     {
                         monitoreoActivo = false;
                     }
-                    return true;
                 }
+                
+                return true;
             }
-        }
-
-        static void ForzarFalloSimulado()
-        {
-            Console.Clear();
-            Console.WriteLine("=== SIMULACIÓN: FORZAR TEMPERATURA CRÍTICA ===");
-            Console.WriteLine("                                               ");
-            Console.WriteLine("Introduzca el número de piso (1-3) o 'C' para cancelar.");
-
-            while (true)
-            {
-                Console.Write("Piso (1-3) o C: ");
-                string entrada = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(entrada)) continue;
-                if (entrada.Trim().Equals("C", StringComparison.OrdinalIgnoreCase))
-                {
-                    Console.WriteLine("Operación cancelada. Presione una tecla para regresar.");
-                    Console.ReadKey();
-                    return;
-                }
-
-                if (int.TryParse(entrada.Trim(), out int p) && p >= 1 && p <= 3)
-                {
-                    sensoresEdificio[p - 1].ForzarIncendio();
-                    RegistrarEvento($"Simulación: incendio forzado en Piso {p}.");
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Piso {p} configurado a 75°C. Inicie el monitoreo para ver la alerta.");
-                    Console.ResetColor();
-
-                    // Preguntar si desea forzar otro piso
-                    while (true)
-                    {
-                        Console.Write("¿Desea forzar otro piso? (S/N): ");
-                        string resp = Console.ReadLine();
-                        if (string.IsNullOrWhiteSpace(resp)) continue;
-                        resp = resp.Trim().ToUpper();
-                        if (resp == "S")
-                        {
-                            // Volver al inicio del bucle principal para ingresar otro piso
-                            break; // rompe el bucle interno y vuelve a solicitar piso
-                        }
-                        else if (resp == "N")
-                        {
-                            Console.WriteLine("Regresando al menú principal. Presione una tecla para continuar.");
-                            Console.ReadKey();
-                            return;
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine("Entrada no válida. Introduzca 'S' o 'N'.");
-                            Console.ResetColor();
-                        }
-                    }
-                    // continuar para forzar otro piso
-                    continue;
-                }
-
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Entrada no válida. Introduzca 1, 2, 3 o C para cancelar.");
-                Console.ResetColor();
-            }
-        }
-
-        public static void MostrarBitacora()
-        {
-            Console.Clear();
-            MostrarEncabezado("HISTORIAL DE EVENTOS", null, ConsoleColor.Cyan);
-            foreach (var evento in bitacoraEventos)
-            {
-                Console.WriteLine($" - {evento}");
-            }
-            Console.WriteLine("\nPresione cualquier tecla para regresar.");
-            Console.ReadKey();
         }
 
         public static void RegistrarEvento(string mensaje)
