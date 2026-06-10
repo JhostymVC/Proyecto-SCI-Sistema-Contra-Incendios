@@ -26,8 +26,9 @@ namespace SistemaContraIncendios.UI
                 MostrarEncabezado("PANEL DE CONTROL DE INCENDIOS", null, ConsoleColor.Cyan);
                 Console.WriteLine("                                               ");
                 Console.WriteLine(" [1] Ver estado actual");
-                Console.WriteLine(" [2] Activar Aspersores");
-                Console.WriteLine(" [3] Salir del Sistema");
+                Console.WriteLine(" [2] Forzar Temperatura Crítica");
+                Console.WriteLine(" [3] Ver Historial de Alertas");
+                Console.WriteLine(" [4] Salir del Sistema");
                 Console.WriteLine("                                               ");
                 Console.WriteLine("--------------------------------------------------");
                 Console.Write("Seleccione una opción: ");
@@ -38,9 +39,12 @@ namespace SistemaContraIncendios.UI
                         MenuMonitoreo();
                         break;
                     case "2":
-                        SubmenuAspersores(0, false);
+                        // Opción no programada aún
                         break;
                     case "3":
+                        // Opción no programada aún
+                        break;
+                    case "4":
                         ejecutar = false;
                         Console.WriteLine("Apagando panel de control...");
                         break;
@@ -143,7 +147,9 @@ namespace SistemaContraIncendios.UI
                 MostrarEncabezado($"ALERTA: INCENDIO EN PISO(S) {string.Join(",", pisosAfectados)}", "SISTEMA EN ESTADO DE CRISIS", ConsoleColor.Red);
                 Console.WriteLine("                                               ");
                 Console.WriteLine(" [1] Activar Aspersores");
-                Console.WriteLine(" [2] Restablecer Sistema / Silenciar Alarma");
+                Console.WriteLine(" [2] Evacuación");
+                Console.WriteLine(" [3] Llamar a Bomberos");
+                Console.WriteLine(" [4] Restablecer Sistema / Silenciar Alarma");
                 Console.WriteLine("--------------------------------------------------");
                 Console.Write("Seleccione una acción de mitigación urgente: ");
 
@@ -184,6 +190,12 @@ namespace SistemaContraIncendios.UI
                         }
                         break;
                     case "2":
+                        // Opción no programada aún
+                        break;
+                    case "3":
+                        // Opción no programada aún
+                        break;
+                    case "4":
                         // Mostrar alerta roja de intento de restablecer durante unos segundos
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("\n[SISTEMA]: Intentando restablecer / silenciar alarma...");
